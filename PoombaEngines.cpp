@@ -1,7 +1,12 @@
 #include "PoombaEngines.h"
 
 const unsigned long int PoombaEngines::BAUD_RATE = 9600;
-const unsigned int PoombaEngines::DEFAULT_SPEED = 15;
+const unsigned int      PoombaEngines::DEFAULT_SPEED = 15;
+const unsigned int      PoombaEngines::REFRESH_ENCODER_FREQ = 20;
+const float             PoombaEngines::WHEEL_RADIUS = 4.9;
+const float             PoombaEngines::WHEEL_CIRCUMFERENCE = 2 * PI * WHEEL_RADIUS;
+const float             PoombaEngines::ROBOT_RADIUS = 12.4;
+const float             PoombaEngines::ROBOT_CIRCUMFERENCE = 2 * PI * ROBOT_RADIUS;
 
 const unsigned int PoombaEngines::ACK = 0x00;
 const unsigned int PoombaEngines::SET_SPEED_1 = 0x31;
@@ -10,43 +15,65 @@ const unsigned int PoombaEngines::SET_MODE = 0x34;
 const unsigned int PoombaEngines::MODE_2 = 0x02;
 const unsigned int PoombaEngines::STOP_VALUE = 128;
 const unsigned int PoombaEngines::DISABLE_TIMEOUT = 0x38;
+const unsigned int PoombaEngines::RESET_ENCODERS = 0x35;
+const unsigned int PoombaEngines::GET_ENCODER_1 = 0x23;
+const unsigned int PoombaEngines::GET_ENCODER_2 = 0x24;
 
 void PoombaEngines::setup(unsigned long int baudRate) {
   Serial2.begin(baudRate);
   setMode(PoombaEngines::MODE_2); // This library only works with engines in mode 2
   disableTimeout();
 
-  moveForward(5);
-  moveBackward(5);
+  moveForward(2 * PI * WHEEL_RADIUS);
+  moveBackward(2 * 2 * PI * WHEEL_RADIUS);
+  moveForward(2 * PI * WHEEL_RADIUS);
   turnLeft(45);
   turnRight(90);
   turnLeft(45);
 }
 
-void PoombaEngines::moveForward(int length, int speed) {  
-  setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE + speed);
-  delay(length / 12.5 * 1000);
-  stopEngines();
+void PoombaEngines::moveForward(int length, int speed) {
+  resetEncoders();
+  float wheelDegrees = (360 * length) / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  while(getEncoder1() < wheelDegrees) {
+    setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE + speed);
+    delay(PoombaEngines::REFRESH_ENCODER_FREQ);
+    stopEngines();
+  }
 }
 
 void PoombaEngines::moveBackward(int length, int speed) {
-  setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE - speed);
-  delay(length / 12.5 * 1000);
-  stopEngines();
+  resetEncoders();
+  float wheelDegrees = (360 * length) / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  while(-getEncoder1() < wheelDegrees) {
+    setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE - speed);
+    delay(PoombaEngines::REFRESH_ENCODER_FREQ);
+    stopEngines();
+  }
 }
 
 void PoombaEngines::turnLeft(int degrees, int speed) {
-  setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
-  setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE - speed);
-  delay(((20/90.0) * degrees) / 12.5 * 1000);
-  stopEngines();
+  resetEncoders();
+  float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
+  float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  while(-getEncoder1() < wheelDegrees) {
+    setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
+    setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE - speed);
+    delay(PoombaEngines::REFRESH_ENCODER_FREQ);
+    stopEngines();
+  }
 }
 
 void PoombaEngines::turnRight(int degrees, int speed) {
-  setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
-  setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE + speed);
-  delay(((20/90.0) * degrees) / 12.5 * 1000);
-  stopEngines();
+  resetEncoders();
+  float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
+  float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  while(getEncoder1() < wheelDegrees) {
+    setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
+    setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE + speed);
+    delay(PoombaEngines::REFRESH_ENCODER_FREQ);
+    stopEngines();
+  }
 }
 
 void PoombaEngines::setMode(int mode) {
@@ -78,4 +105,44 @@ void PoombaEngines::disableTimeout() {
     PoombaEngines::DISABLE_TIMEOUT
   };
   Serial2.write(disableTimeoutMsg, sizeof(disableTimeoutMsg));
+}
+
+void PoombaEngines::resetEncoders() {
+  byte resetEncodersMsg [] = {
+    PoombaEngines::ACK,
+    PoombaEngines::RESET_ENCODERS
+  };
+  Serial2.write(resetEncodersMsg, sizeof(resetEncodersMsg));
+}
+
+long PoombaEngines::getEncoder1() {
+  byte getEncoder1Msg [] = {
+    PoombaEngines::ACK,
+    PoombaEngines::GET_ENCODER_1
+  };
+  Serial2.write(getEncoder1Msg, sizeof(getEncoder1Msg));
+
+  while(Serial2.available() < 4);
+  long result = Serial2.read() << 24;
+  result += Serial2.read() << 16;
+  result += Serial2.read() << 8;
+  result += Serial2.read();
+
+  return result;
+}
+
+long PoombaEngines::getEncoder2() {
+  byte getEncoder2Msg [] = {
+    PoombaEngines::ACK,
+    PoombaEngines::GET_ENCODER_2
+  };
+  Serial2.write(getEncoder2Msg, sizeof(getEncoder2Msg));
+
+  while(Serial2.available() < 4);
+  long result = Serial2.read() << 24;
+  result += Serial2.read() << 16;
+  result += Serial2.read() << 8;
+  result += Serial2.read();
+
+  return result;
 }
