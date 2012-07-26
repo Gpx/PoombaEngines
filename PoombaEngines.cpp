@@ -35,9 +35,6 @@ void PoombaEngines::setup(unsigned long int baudRate) {
 void PoombaEngines::moveForward(int length, int speed) {
   resetEncoders();
   double wheelDegrees = length / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
-  Serial.println(length);
-  Serial.println(PoombaEngines::WHEEL_CIRCUMFERENCE);
-  Serial.println(wheelDegrees);
   while(getEncoder1() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE + speed);
     delay(PoombaEngines::REFRESH_ENCODER_FREQ);
