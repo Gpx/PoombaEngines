@@ -27,14 +27,17 @@ void PoombaEngines::setup(unsigned long int baudRate) {
   moveForward(2 * PI * WHEEL_RADIUS);
   moveBackward(2 * 2 * PI * WHEEL_RADIUS);
   moveForward(2 * PI * WHEEL_RADIUS);
-  turnLeft(45);
-  turnRight(90);
-  turnLeft(45);
+  turnLeft(90);
+  turnRight(180);
+  turnLeft(90);
 }
 
 void PoombaEngines::moveForward(int length, int speed) {
   resetEncoders();
-  float wheelDegrees = (360 * length) / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  double wheelDegrees = length / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
+  Serial.println(length);
+  Serial.println(PoombaEngines::WHEEL_CIRCUMFERENCE);
+  Serial.println(wheelDegrees);
   while(getEncoder1() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE + speed);
     delay(PoombaEngines::REFRESH_ENCODER_FREQ);
@@ -44,7 +47,7 @@ void PoombaEngines::moveForward(int length, int speed) {
 
 void PoombaEngines::moveBackward(int length, int speed) {
   resetEncoders();
-  float wheelDegrees = (360 * length) / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  double wheelDegrees = length / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
   while(-getEncoder1() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE - speed);
     delay(PoombaEngines::REFRESH_ENCODER_FREQ);
@@ -54,8 +57,8 @@ void PoombaEngines::moveBackward(int length, int speed) {
 
 void PoombaEngines::turnLeft(int degrees, int speed) {
   resetEncoders();
-  float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
-  float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
+  double movementLength = degrees / 360 * PoombaEngines::ROBOT_CIRCUMFERENCE;
+  double wheelDegrees = movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
   while(-getEncoder1() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
     setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE - speed);
@@ -66,9 +69,9 @@ void PoombaEngines::turnLeft(int degrees, int speed) {
 
 void PoombaEngines::turnRight(int degrees, int speed) {
   resetEncoders();
-  float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
-  float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
-  while(getEncoder1() < wheelDegrees) {
+  double movementLength = degrees / 360 * PoombaEngines::ROBOT_CIRCUMFERENCE;
+  double wheelDegrees = movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
+  while(-getEncoder2() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
     setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE + speed);
     delay(PoombaEngines::REFRESH_ENCODER_FREQ);
