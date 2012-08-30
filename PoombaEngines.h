@@ -2,6 +2,7 @@
 #define POOMBA_ENGINES_H
 
 #include "Arduino.h"
+#include "PoombaCompass.h"
 
 class PoombaEngines
 {
@@ -44,6 +45,9 @@ private:
   static const unsigned int RESET_ENCODERS;
   static const unsigned int GET_ENCODER_1;
   static const unsigned int GET_ENCODER_2;
+
+  /** Compass handler */
+  PoombaCompass pc;
 };
 
 #endif

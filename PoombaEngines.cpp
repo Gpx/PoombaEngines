@@ -23,13 +23,13 @@ void PoombaEngines::setup(unsigned long int baudRate) {
   Serial2.begin(baudRate);
   setMode(PoombaEngines::MODE_2); // This library only works with engines in mode 2
   disableTimeout();
-
+  /*
   moveForward(2 * PI * WHEEL_RADIUS);
   moveBackward(2 * 2 * PI * WHEEL_RADIUS);
   moveForward(2 * PI * WHEEL_RADIUS);
   turnLeft(90);
   turnRight(180);
-  turnLeft(90);
+  turnLeft(90);*/
 }
 
 void PoombaEngines::moveForward(int length, int speed) {
@@ -54,26 +54,36 @@ void PoombaEngines::moveBackward(int length, int speed) {
 
 void PoombaEngines::turnLeft(int degrees, int speed) {
   resetEncoders();
-  double movementLength = degrees / 360 * PoombaEngines::ROBOT_CIRCUMFERENCE;
-  double wheelDegrees = movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
+  float startAngle = pc.getAngle();
+  float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
+  float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
   while(-getEncoder1() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
     setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE - speed);
     delay(PoombaEngines::REFRESH_ENCODER_FREQ);
     stopEngines();
   }
+
+  int diff = pc.getDifference(startAngle, pc.getAngle(), 1);
+  Serial1.println(diff);
+  Serial.println(diff);
 }
 
 void PoombaEngines::turnRight(int degrees, int speed) {
   resetEncoders();
-  double movementLength = degrees / 360 * PoombaEngines::ROBOT_CIRCUMFERENCE;
-  double wheelDegrees = movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE * 360;
+  float startAngle = pc.getAngle();
+  float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
+  float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
   while(-getEncoder2() < wheelDegrees) {
     setSpeed(PoombaEngines::SET_SPEED_1, PoombaEngines::STOP_VALUE);
     setSpeed(PoombaEngines::SET_SPEED_2, PoombaEngines::STOP_VALUE + speed);
     delay(PoombaEngines::REFRESH_ENCODER_FREQ);
     stopEngines();
   }
+  
+  int diff = pc.getDifference(startAngle, pc.getAngle(), 0);
+  Serial1.println(diff);
+  Serial.println(diff);
 }
 
 void PoombaEngines::setMode(int mode) {
