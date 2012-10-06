@@ -2,6 +2,7 @@
 
 const unsigned long int PoombaEngines::BAUD_RATE = 9600;
 const unsigned int      PoombaEngines::DEFAULT_SPEED = 15;
+const bool              PoombaEngines::DEFAULT_TEST_BEHAVIOR = false;
 const unsigned int      PoombaEngines::REFRESH_ENCODER_FREQ = 20;
 const float             PoombaEngines::WHEEL_RADIUS = 4.9;
 const float             PoombaEngines::WHEEL_CIRCUMFERENCE = 2 * PI * WHEEL_RADIUS;
@@ -52,9 +53,12 @@ void PoombaEngines::moveBackward(int length, int speed) {
   }
 }
 
-void PoombaEngines::turnLeft(int degrees, int speed) {
+void PoombaEngines::turnLeft(int degrees, bool test, int speed) {
   resetEncoders();
-  float startAngle = pc.getAngle();
+  float startAngle;
+  if (test) {
+    startAngle = pc.getAngle();
+  }
   float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
   float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
   while(-getEncoder1() < wheelDegrees) {
@@ -64,14 +68,19 @@ void PoombaEngines::turnLeft(int degrees, int speed) {
     stopEngines();
   }
 
-  int diff = pc.getDifference(startAngle, pc.getAngle(), 1);
-  Serial1.println(diff);
-  Serial.println(diff);
+  if (test) {
+    int diff = pc.getDifference(startAngle, pc.getAngle(), 1);
+    Serial1.println(diff);
+    Serial.println(diff);
+  }
 }
 
-void PoombaEngines::turnRight(int degrees, int speed) {
+void PoombaEngines::turnRight(int degrees, bool test, int speed) {
   resetEncoders();
-  float startAngle = pc.getAngle();
+  float startAngle;
+  if (test) {
+    startAngle = pc.getAngle();
+  }
   float movementLength = PoombaEngines::ROBOT_CIRCUMFERENCE * degrees / 360;
   float wheelDegrees = 360 * movementLength / PoombaEngines::WHEEL_CIRCUMFERENCE;
   while(-getEncoder2() < wheelDegrees) {
@@ -81,9 +90,11 @@ void PoombaEngines::turnRight(int degrees, int speed) {
     stopEngines();
   }
   
-  int diff = pc.getDifference(startAngle, pc.getAngle(), 0);
-  Serial1.println(diff);
-  Serial.println(diff);
+  if (test) {
+    int diff = pc.getDifference(startAngle, pc.getAngle(), 0);
+    Serial1.println(diff);
+    Serial.println(diff);
+  }
 }
 
 void PoombaEngines::setMode(int mode) {

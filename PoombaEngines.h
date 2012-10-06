@@ -12,8 +12,8 @@ public:
   /** Movement functions */
   void moveForward(int length, int speed = PoombaEngines::DEFAULT_SPEED);
   void moveBackward(int length, int speed = PoombaEngines::DEFAULT_SPEED);
-  void turnLeft(int degrees, int speed = PoombaEngines::DEFAULT_SPEED);
-  void turnRight(int degrees, int speed = PoombaEngines::DEFAULT_SPEED);
+  void turnLeft(int degrees, bool test = PoombaEngines::DEFAULT_TEST_BEHAVIOR, int speed = PoombaEngines::DEFAULT_SPEED);
+  void turnRight(int degrees, bool test = PoombaEngines::DEFAULT_TEST_BEHAVIOR, int speed = PoombaEngines::DEFAULT_SPEED);
 
 private:
   /** Engines utility functions */
@@ -28,6 +28,7 @@ private:
   /** Generics constants */
   static const unsigned long int BAUD_RATE;
   static const unsigned int      DEFAULT_SPEED;
+  static const bool              DEFAULT_TEST_BEHAVIOR;
   static const unsigned int      REFRESH_ENCODER_FREQ; // ms
   static const float             WHEEL_RADIUS; // cm
   static const float             WHEEL_CIRCUMFERENCE; // cm
